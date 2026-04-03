@@ -72,6 +72,7 @@ Os selos considerados são: **Disponíveis (SeloD)**, **Funcionais (SeloF)**, **
 | torch | 2.0 |
 | torchvision | 0.15 |
 | numpy | 1.24 |
+| matplotlib | 3.7 |
 
 O dataset CIFAR-10 é baixado automaticamente pelo `torchvision` na primeira execução (aproximadamente 170 MB). Não é necessário acesso a recursos externos além do PyPI e dos servidores do CIFAR-10.
 
@@ -124,7 +125,7 @@ Cada experimento gera um arquivo JSON contendo:
 - `tracks.vdn.test_acc`: acurácia por rodada da trilha VDN (MARL)
 - `tracks.*.selection_count_total_per_client`: frequência de seleção por cliente
 
-Um resultado pré-computado de referência está disponível no repositório (`experiments/results/exp1_seed2049_7d50d4cbe4.json`) para consulta imediata, sem necessidade de re-executar os experimentos.
+Um resultado pré-computado do Experimento 1 está disponível no repositório (`experiments/results/exp1_seed2049_7d50d4cbe4.json`) para consulta imediata, sem necessidade de re-executar os experimentos.
 
 **Recursos esperados:** ~32 GB VRAM (GPU utilizada no artigo); em GPUs com menos memória, reduzir `n_clients` ou `max_per_client`.
 
@@ -169,7 +170,5 @@ python experiments/exp4.py
 ---
 
 # LICENSE
-
-MIT License
 
 MIT License — Copyright (c) 2026
