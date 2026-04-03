@@ -42,6 +42,21 @@ fedmarl-sbrc25/
 
 ---
 
+# Correspondência com o Artigo
+
+| Componente | Arquivo | Classe/Função |
+|---|---|---|
+| Seleção de clientes via MARL | `agent.py` | `VDNSelector` |
+| Vetor de observação 5D | `agent.py` | `build_context_matrix_vdn` |
+| Métrica proj (alinhamento ao gradiente do servidor) | `server.py` | `compute_deltas_proj_mom_probe_now` |
+| Métrica gener (generalização local) | `server.py` | `compute_deltas_proj_mom_probe_now` |
+| Métrica staleness (rounds sem seleção) | `server.py` | `update_staleness_streak` |
+| Métrica streak (seleções consecutivas) | `server.py` | `update_staleness_streak` |
+| Ataque de label flipping | `data.py` | `SwitchableTargetedLabelFlipSubset` |
+| Comparação FedAvg vs MARL | `experiment.py` | `run_experiment` |
+
+---
+
 # Selos Considerados
 
 Os selos considerados são: **Disponíveis (SeloD)**, **Funcionais (SeloF)**, **Sustentáveis (SeloS)** e **Reprodutíveis (SeloR)**.
@@ -89,7 +104,7 @@ Não há preocupações de segurança relevantes para os avaliadores.
 ```bash
 # 1. Clone o repositório
 git clone https://github.com/braiton1277/fedmarl-sbrc26.git
-cd fedmarl-sbrc25
+cd fedmarl-sbrc26
 
 # 2. Crie um ambiente virtual (recomendado)
 python -m venv venv
@@ -120,16 +135,11 @@ python test_min.py
 
 Os experimentos comparam a seleção de clientes por MARL com a seleção aleatória (FedAvg) sob diferentes cenários de ataque de label flipping e dados não-IID, ao longo de 500 rodadas de treinamento com 50 clientes, selecionando 15 por rodada.
 
-Cada experimento gera um arquivo JSON contendo:
-- `tracks.fedavg.test_acc`: acurácia por rodada da trilha FedAvg
-- `tracks.marl.test_acc`: acurácia por rodada da trilha MARL
-- `tracks.*.selection_count_total_per_client`: frequência de seleção por cliente
-
-Um resultado pré-computado do Experimento 1 está disponível no repositório (`experiments/results/exp1_seed2049_7d50d4cbe4.json`) para consulta imediata, sem necessidade de re-executar os experimentos.
-
 **Recursos esperados:** ~32 GB VRAM (GPU utilizada no artigo); em GPUs com menos memória, reduzir `n_clients` ou `max_per_client`.
 
-**Tempo esperado por experimento:** aproximadamente 1 hora em GPU NVIDIA RTX 5090.
+**Tempo esperado por experimento:** aproximadamente 1h30 em GPU NVIDIA RTX 5090.
+
+Para executar cada experimento individualmente:
 
 ## Reivindicação #1 — Impacto da proporção de clientes atacantes
 
@@ -166,6 +176,21 @@ python experiments/exp4.py
 ```
 
 **Resultado esperado:** mesmo com ataques de menor intensidade, a trilha MARL mantém acurácia superior à FedAvg, evidenciando a robustez da abordagem em diferentes níveis de ataque.
+
+---
+
+Para executar todos os experimentos automaticamente em sequência:
+
+```bash
+bash run_all.sh
+```
+
+Cada experimento gera automaticamente em `experiments/results/` um arquivo JSON e um gráfico (PDF e PNG) contendo:
+- `tracks.fedavg.test_acc`: acurácia por rodada da trilha FedAvg
+- `tracks.marl.test_acc`: acurácia por rodada da trilha MARL
+- `tracks.*.selection_count_total_per_client`: frequência de seleção por cliente
+
+Resultados pré-computados de todos os experimentos (JSON e gráficos em PDF e PNG) estão disponíveis em `experiments/results/` para consulta imediata, sem necessidade de re-executar os experimentos. Caso prefira reproduzir, ao final de cada execução o JSON e o gráfico são gerados automaticamente no mesmo diretório.
 
 ---
 
