@@ -4,7 +4,7 @@ Este artefato contém a implementação do mecanismo de seleção de clientes pa
 
 ---
 
-# Estrutura do README.md
+# Estrutura do README
 
 Este README está organizado nas seguintes seções:
 
