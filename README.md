@@ -21,20 +21,23 @@ O repositório está organizado da seguinte forma:
 
 ```
 fedmarl-sbrc25/
-├── config.py        # Semente global, dispositivo e utilitários de reprodutibilidade
-├── model.py         # Definição da SmallCNN para CIFAR-10
-├── data.py          # Particionamento Dirichlet e dataset com ataque de label flipping
-├── metrics.py       # Funções de avaliação, recompensa e utilitários de parâmetros
-├── server.py        # Treinamento local, agregação FedAvg e rastreamento de estado
-├── agent.py         # Agente MARL: Q-network, replay buffer PER e seleção Top-K
-├── experiment.py    # Loop principal do experimento (FedAvg vs MARL)
-├── main.py          # Ponto de entrada com hiperparâmetros configuráveis
-├── test_min.py      # Script de teste mínimo para verificação da instalação
-├── exp1.py          # Experimento 1: 40% atacantes, 100% inversão
-├── exp2.py          # Experimento 2: 60% atacantes, 100% inversão
-├── exp3.py          # Experimento 3: 40% atacantes, 60% inversão
-├── exp4.py          # Experimento 4: 40% atacantes, 40% inversão
-└── requirements.txt # Dependências do projeto
+├── experiments/
+│   ├── exp1.py          # Experimento 1: 40% atacantes, 100% inversão
+│   ├── exp2.py          # Experimento 2: 60% atacantes, 100% inversão
+│   ├── exp3.py          # Experimento 3: 40% atacantes, 60% inversão
+│   ├── exp4.py          # Experimento 4: 40% atacantes, 40% inversão
+│   └── results/         # JSONs e PNGs gerados pelos experimentos
+├── config.py            # Semente global, dispositivo e utilitários de reprodutibilidade
+├── model.py             # Definição da SmallCNN para CIFAR-10
+├── data.py              # Particionamento Dirichlet e dataset com ataque de label flipping
+├── metrics.py           # Funções de avaliação, recompensa e utilitários de parâmetros
+├── server.py            # Treinamento local, agregação FedAvg e rastreamento de estado
+├── agent.py             # Agente MARL: Q-network, replay buffer PER e seleção Top-K
+├── experiment.py        # Loop principal do experimento (FedAvg vs MARL)
+├── main.py              # Ponto de entrada com hiperparâmetros configuráveis
+├── test_min.py          # Script de teste mínimo para verificação da instalação
+├── plot.py              # Script de plotagem de resultados a partir do JSON
+└── requirements.txt     # Dependências do projeto
 ```
 
 ---
@@ -121,7 +124,7 @@ Cada experimento gera um arquivo JSON contendo:
 - `tracks.vdn.test_acc`: acurácia por rodada da trilha VDN (MARL)
 - `tracks.*.selection_count_total_per_client`: frequência de seleção por cliente
 
-Um resultado pré-computado de referência está disponível no repositório (`results_random_vs_vdn_targeted_PROJMOM_FO_seed2049_92768206f1.json`) para consulta imediata, sem necessidade de re-executar os experimentos.
+Um resultado pré-computado de referência está disponível no repositório (`experiments/results/exp1_seed2049_7d50d4cbe4.json`) para consulta imediata, sem necessidade de re-executar os experimentos.
 
 **Recursos esperados:** ~32 GB VRAM (GPU utilizada no artigo); em GPUs com menos memória, reduzir `n_clients` ou `max_per_client`.
 
@@ -134,13 +137,13 @@ Avalia o desempenho da abordagem MARL à medida que a fração de clientes malic
 **Experimento 1** — 40% de atacantes, 100% de inversão:
 
 ```bash
-python exp1.py
+python experiments/exp1.py
 ```
 
 **Experimento 2** — 60% de atacantes, 100% de inversão:
 
 ```bash
-python exp2.py
+python experiments/exp2.py
 ```
 
 **Resultado esperado:** em ambos os cenários, a trilha VDN apresenta acurácia de teste superior à trilha RANDOM, com a vantagem se tornando mais evidente conforme a proporção de atacantes aumenta.
@@ -152,13 +155,13 @@ Avalia o desempenho da abordagem MARL à medida que a intensidade do ataque dimi
 **Experimento 3** — 40% de atacantes, 60% de inversão:
 
 ```bash
-python exp3.py
+python experiments/exp3.py
 ```
 
 **Experimento 4** — 40% de atacantes, 40% de inversão:
 
 ```bash
-python exp4.py
+python experiments/exp4.py
 ```
 
 **Resultado esperado:** mesmo com ataques de menor intensidade, a trilha VDN mantém acurácia superior à seleção aleatória, evidenciando a robustez da abordagem em diferentes níveis de ataque.
@@ -169,10 +172,4 @@ python exp4.py
 
 MIT License
 
-Copyright (c) 2026 GTA-UFRJ
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+MIT License — Copyright (c) 2026

@@ -318,7 +318,8 @@ def run_experiment(
     for cid, size in enumerate(client_sizes):
         flag = "ATTACKER" if cid in attacked_set else "HONEST"
         print(f"  {cid:02d} | {flag:8s} | {size} samples")
-    print(f"  mean={np.mean(client_sizes):.1f} | min={np.min(client_sizes)} | max={np.max(client_sizes)}\n")
+    print(f"  mean={np.mean(client_sizes):.1f} | min={np.min(client_sizes)} | max={np.max(client_sizes)}")
+    print(f"Atacantes: {len(attacked_set)}/{n_clients} ({100*len(attacked_set)/n_clients:.1f}%)\n")
 
     try:
         for t in range(1, rounds + 1):

@@ -1,6 +1,11 @@
 {
+  "resumo": {
+    "experimento": "exp1",
+    "fedavg_acuracia_final_%": 47.78,
+    "marl_acuracia_final_%": 64.2
+  },
   "meta": {
-    "run_id": "92768206f1",
+    "run_id": "7d50d4cbe4",
     "seed": 2049,
     "device": "cuda",
     "rounds": 500,
@@ -26,7 +31,7 @@
   },
   "attack_schedule": [],
   "tracks": {
-    "random": {
+    "fedavg": {
       "test_acc": [
         0.1075,
         0.1005,
@@ -665,7 +670,7 @@
         "total_selections": 7500
       }
     },
-    "vdn": {
+    "marl": {
       "test_acc": [
         0.1075,
         0.1183,
