@@ -48,6 +48,6 @@ run_experiment(
     eval_max_batches=20,
     print_every=1,
     print_advfo_every=20,
-    out_dir=".",
+    out_dir="experiments/results",
     exp_name="exp2",
 )

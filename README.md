@@ -88,7 +88,7 @@ Não há preocupações de segurança relevantes para os avaliadores.
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/braiton1277/fedmarl-sbrc25.git
+git clone https://github.com/braiton1277/fedmarl-sbrc26.git
 cd fedmarl-sbrc25
 
 # 2. Crie um ambiente virtual (recomendado)
