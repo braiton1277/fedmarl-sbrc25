@@ -1,6 +1,9 @@
 """
 Experimento: 40% de clientes atacantes com taxa de inversão de 100%.
 """
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from experiment import run_experiment
 
 run_experiment(

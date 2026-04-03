@@ -112,7 +112,7 @@ Execute o script de teste mínimo — 10 rodadas com 10 clientes, selecionando 3
 python test_min.py
 ```
 
-**Resultado esperado:** 10 rodadas de progresso impressas no terminal com as acurácias das trilhas RANDOM e VDN, e um arquivo JSON salvo no diretório atual ao final da execução, contendo a acurácia de teste por rodada de cada trilha e a contagem de seleções por cliente.
+**Resultado esperado:** 10 rodadas de progresso impressas no terminal com as acurácias das trilhas FedAvg e MARL, e um arquivo JSON salvo no diretório atual ao final da execução, contendo a acurácia de teste por rodada de cada trilha e a contagem de seleções por cliente.
 
 ---
 
@@ -121,8 +121,8 @@ python test_min.py
 Os experimentos comparam a seleção de clientes por MARL com a seleção aleatória (FedAvg) sob diferentes cenários de ataque de label flipping e dados não-IID, ao longo de 500 rodadas de treinamento com 50 clientes, selecionando 15 por rodada.
 
 Cada experimento gera um arquivo JSON contendo:
-- `tracks.random.test_acc`: acurácia por rodada da trilha RANDOM (FedAvg)
-- `tracks.vdn.test_acc`: acurácia por rodada da trilha VDN (MARL)
+- `tracks.fedavg.test_acc`: acurácia por rodada da trilha FedAvg
+- `tracks.marl.test_acc`: acurácia por rodada da trilha MARL
 - `tracks.*.selection_count_total_per_client`: frequência de seleção por cliente
 
 Um resultado pré-computado do Experimento 1 está disponível no repositório (`experiments/results/exp1_seed2049_7d50d4cbe4.json`) para consulta imediata, sem necessidade de re-executar os experimentos.
@@ -147,7 +147,7 @@ python experiments/exp1.py
 python experiments/exp2.py
 ```
 
-**Resultado esperado:** em ambos os cenários, a trilha VDN apresenta acurácia de teste superior à trilha RANDOM, com a vantagem se tornando mais evidente conforme a proporção de atacantes aumenta.
+**Resultado esperado:** em ambos os cenários, a trilha MARL apresenta acurácia de teste superior à trilha FedAvg, com a vantagem se tornando mais evidente conforme a proporção de atacantes aumenta.
 
 ## Reivindicação #2 — Impacto da porcentagem de inversão de rótulos
 
@@ -165,7 +165,7 @@ python experiments/exp3.py
 python experiments/exp4.py
 ```
 
-**Resultado esperado:** mesmo com ataques de menor intensidade, a trilha VDN mantém acurácia superior à seleção aleatória, evidenciando a robustez da abordagem em diferentes níveis de ataque.
+**Resultado esperado:** mesmo com ataques de menor intensidade, a trilha MARL mantém acurácia superior à FedAvg, evidenciando a robustez da abordagem em diferentes níveis de ataque.
 
 ---
 
