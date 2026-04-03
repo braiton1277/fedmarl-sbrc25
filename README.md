@@ -79,8 +79,8 @@ GPU é recomendado; CPU é suportado mas significativamente mais lento. O códig
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/braiton1277/fedmarl-byzantine.git
-cd fedmarl-byzantine
+git clone https://github.com/braiton1277/fedmarl-sbrc25.git
+cd fedmarl-sbrc25
 
 # 2. Crie um ambiente virtual (recomendado)
 python -m venv venv
@@ -142,7 +142,7 @@ O arquivo JSON gerado contém:
 
 
 
-> **Nota sobre tempo de execução:** 500 rodadas com 50 clientes e `local_steps=10` levam aproximadamente 4–8 horas em GPU e 20–40 horas em CPU, dependendo do hardware. Um resultado pré-computado de referência (`results_random_vs_vdn_targeted_PROJMOM_FO_seed2049_92768206f1.json`) está disponível no repositório para consulta imediata.
+> **Nota sobre tempo de execução:** 500 rodadas com 50 clientes e `local_steps=10` levam aproximadamente 1 hora em GPU, dependendo do hardware. Um resultado pré-computado de referência (`results_random_vs_vdn_targeted_PROJMOM_FO_seed2049_92768206f1.json`) está disponível no repositório para consulta imediata.
 
 ---
 
