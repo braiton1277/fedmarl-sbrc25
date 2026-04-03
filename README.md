@@ -185,10 +185,14 @@ Para executar todos os experimentos automaticamente em sequência:
 bash run_all.sh
 ```
 
-Cada experimento gera automaticamente em `experiments/results/` um arquivo JSON e um gráfico (PDF e PNG) contendo:
+Cada experimento gera automaticamente em `experiments/results/` um arquivo JSON e um gráfico (PDF e PNG).
+
+O arquivo JSON contém:
 - `tracks.fedavg.test_acc`: acurácia por rodada da trilha FedAvg
 - `tracks.marl.test_acc`: acurácia por rodada da trilha MARL
 - `tracks.*.selection_count_total_per_client`: frequência de seleção por cliente
+
+O gráfico exibe as curvas de acurácia por rodada de cada trilha.
 
 Resultados pré-computados de todos os experimentos (JSON e gráficos em PDF e PNG) estão disponíveis em `experiments/results/` para consulta imediata, sem necessidade de re-executar os experimentos. Caso prefira reproduzir, ao final de cada execução o JSON e o gráfico são gerados automaticamente no mesmo diretório.
 
