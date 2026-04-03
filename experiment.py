@@ -209,6 +209,20 @@ def run_experiment(
             json.dump(log, f, indent=2)
         print(f"\n[JSON] salvo em: {str(out_path)}\n", flush=True)
 
+        # Gera gráfico automaticamente
+        try:
+            import subprocess
+            subprocess.run(["python", "plot.py", str(out_path)], check=True)
+        except Exception as e:
+            print(f"[PLOT] Erro ao gerar gráfico: {e}", flush=True)
+
+        # Gera gráfico automaticamente
+        try:
+            import subprocess
+            subprocess.run(["python", "plot.py", str(out_path)], check=True)
+        except Exception as e:
+            print(f"[PLOT] Erro ao gerar gráfico: {e}", flush=True)
+
     def start_phase(track: str, start_round: int, attacked: List[int]):
         log["tracks"][track]["selection_phases"].append({
             "start_round": int(start_round), "end_round": None,
