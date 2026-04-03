@@ -1,8 +1,8 @@
 # FEDMARL: Seleção de Clientes Federados usando Aprendizado por Reforço Multiagente
 
-Implementação do artefato referente ao artigo **"Seleção de Clientes Federados usando Aprendizado por Reforço Multiagente"**, submetido ao SBRC 2025.
+Implementação do artefato referente ao artigo **"Seleção de Clientes Federados usando Aprendizado por Reforço Multiagente"**, submetido ao SBRC 2026.
 
-Este repositório contém a implementação de um mecanismo de seleção de clientes para Aprendizado Federado (FL) baseado em Aprendizado por Reforço Multiagente (MARL), utilizando Value Decomposition Networks (VDN), com foco em robustez contra ataques de inversão de rótulos (label flipping).
+Este repositório contém a implementação de um mecanismo de seleção de clientes para Aprendizado Federado (FL) baseado em Aprendizado por Reforço Multiagente (MARL), com foco em robustez contra ataques de inversão de rótulos (label flipping).
 
 ---
 
