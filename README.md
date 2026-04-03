@@ -1,6 +1,8 @@
 # Seleção de Clientes Federados usando Aprendizado por Reforço Multiagente
 
-Este artefato contém a implementação do mecanismo de seleção de clientes para Aprendizado Federado (FL) proposto no artigo **"Seleção de Clientes Federados usando Aprendizado por Reforço Multiagente"**, submetido ao SBRC 2026. A abordagem aplica Aprendizado por Reforço Multiagente (MARL) para a seleção cooperativa de clientes de forma robusta contra ataques de inversão de rótulos (label flipping) em cenários de dados não-IID.
+Este artefato contém a implementação do mecanismo de seleção de clientes para Aprendizado Federado (FL) proposto no artigo **"Seleção de Clientes Federados usando Aprendizado por Reforço Multiagente"**, submetido ao SBRC 2026. 
+
+No aprendizado federado, o servidor central decide quais clientes devem participar de cada rodada de treinamento. Entretanto, estratégias tradicionais que não estimam a contribuição de cada cliente podem ser vulneráveis a dados de baixa qualidade e a clientes maliciosos. Este trabalho investiga uma abordagem de seleção de clientes baseada no aprendizado por reforço multiagente (MARL). A arquitetura proposta modela cada cliente como um agente, no qual as decisões são tomadas de forma descentralizada e cooperativa. Cada agente avalia características como diversidade de dados, capacidade de processamento e histórico de participação, aprendendo a contribuir para uma seleção mais estratégica dos participantes do treinamento em cenários dinâmicos e não-IID. Os experimentos simulam diferentes graus de heterogeneidade entre os clientes, refletindo distribuições não-IID, além de considerar cenários com inversão de rótulos como estratégia de ataque ao aprendizado. O desempenho, em comparação ao FedAvg e ao single-agent RL (SARL), demonstra melhoria na acurácia final do modelo e no equilíbrio na participação dos clientes.
 
 ---
 
