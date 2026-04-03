@@ -1,81 +1,86 @@
-# FEDMARL: Seleção de Clientes Federados usando Aprendizado por Reforço Multiagente
+# Seleção de Clientes Federados usando Aprendizado por Reforço Multiagente
 
-Implementação do artefato referente ao artigo **"Seleção de Clientes Federados usando Aprendizado por Reforço Multiagente"**, submetido ao SBRC 2026.
-
-Este repositório contém a implementação de um mecanismo de seleção de clientes para Aprendizado Federado (FL) baseado em Aprendizado por Reforço Multiagente (MARL), com foco em robustez contra ataques de inversão de rótulos (label flipping).
+Este artefato contém a implementação do mecanismo de seleção de clientes para Aprendizado Federado (FL) proposto no artigo **"Seleção de Clientes Federados usando Aprendizado por Reforço Multiagente"**, submetido ao SBRC 2026. A abordagem aplica Aprendizado por Reforço Multiagente (MARL) para a seleção cooperativa de clientes de forma robusta contra ataques de inversão de rótulos (label flipping) em cenários de dados não-IID.
 
 ---
 
-## Estrutura do Repositório
+# Estrutura do README.md
+
+Este README está organizado nas seguintes seções:
+
+- **Selos Considerados**: selos solicitados para avaliação
+- **Informações Básicas**: ambiente de hardware e software necessário
+- **Dependências**: bibliotecas e versões utilizadas
+- **Preocupações com Segurança**: riscos para os avaliadores
+- **Instalação**: passo a passo para configurar o ambiente
+- **Teste Mínimo**: execução rápida para verificar a instalação
+- **Experimentos**: reprodução das reivindicações do artigo
+- **LICENSE**: licença do projeto
+
+O repositório está organizado da seguinte forma:
 
 ```
-fedmarl-byzantine/
+fedmarl-sbrc25/
 ├── config.py        # Semente global, dispositivo e utilitários de reprodutibilidade
 ├── model.py         # Definição da SmallCNN para CIFAR-10
 ├── data.py          # Particionamento Dirichlet e dataset com ataque de label flipping
 ├── metrics.py       # Funções de avaliação, recompensa e utilitários de parâmetros
 ├── server.py        # Treinamento local, agregação FedAvg e rastreamento de estado
-├── agent.py         # Agente VDN: Q-network, replay buffer PER e seleção Top-K
-├── experiment.py    # Loop principal do experimento (RANDOM vs VDN)
+├── agent.py         # Agente MARL: Q-network, replay buffer PER e seleção Top-K
+├── experiment.py    # Loop principal do experimento (FedAvg vs MARL)
 ├── main.py          # Ponto de entrada com hiperparâmetros configuráveis
+├── test_min.py      # Script de teste mínimo para verificação da instalação
+├── exp1.py          # Experimento 1: 40% atacantes, 100% inversão
+├── exp2.py          # Experimento 2: 60% atacantes, 100% inversão
+├── exp3.py          # Experimento 3: 40% atacantes, 60% inversão
+├── exp4.py          # Experimento 4: 40% atacantes, 40% inversão
 └── requirements.txt # Dependências do projeto
 ```
 
-### Descrição dos Módulos
+---
 
-| Arquivo | Responsabilidade |
-|---|---|
-| `config.py` | Define `SEED=2049`, `DEVICE` (cuda/cpu), `seed_worker` para reprodutibilidade nos DataLoaders |
-| `model.py` | `SmallCNN`: 3 camadas Conv+Pool → FC(2048→256) → FC(256→10) |
-| `data.py` | `SwitchableTargetedLabelFlipSubset` (ataque determinístico e ativável em runtime); `make_clients_dirichlet_indices` (particionamento não-IID via Dirichlet) |
-| `metrics.py` | `eval_acc`, `eval_loss`, `probing_loss_random_offset`, `windowed_reward`, `dynamic_batch_size` |
-| `server.py` | `compute_deltas_proj_mom_probe_now` (fase de métricas: proj e gener); `apply_fedavg`; `update_staleness_streak` |
-| `agent.py` | `PrioritizedReplayJoint` (PER para N agentes); `AgentMLP` (Q-network MLP); `VDNSelector` (Double DQN + VDN); `build_context_matrix_vdn` (vetor de observação 5D) |
-| `experiment.py` | `run_experiment`: executa as duas trilhas (RANDOM e VDN) em paralelo, salva resultados em JSON |
-| `main.py` | Ponto de entrada; todos os hiperparâmetros do experimento são configurados aqui |
+# Selos Considerados
+
+Os selos considerados são: **Disponíveis (SeloD)**, **Funcionais (SeloF)**, **Sustentáveis (SeloS)** e **Reprodutíveis (SeloR)**.
 
 ---
 
-## Reivindicações Principais do Artigo e Localização no Código
+# Informações Básicas
 
-| Reivindicação | Arquivo(s) | Função/Classe |
-|---|---|---|
-| Seleção de clientes via MARL com VDN | `agent.py` | `VDNSelector`, `AgentMLP` |
-| Vetor de observação 5D (bias, proj, gener, staleness, streak) | `agent.py` | `build_context_matrix_vdn` |
-| Métrica de projeção no gradiente do servidor (proj) | `server.py` | `compute_deltas_proj_mom_probe_now` |
-| Métrica de generalização local (gener) | `server.py` | `compute_deltas_proj_mom_probe_now` |
-| Ataque de label flipping direcionado (40% dos clientes) | `data.py` | `SwitchableTargetedLabelFlipSubset` |
-| Particionamento não-IID via Dirichlet (α=0.3) | `data.py` | `make_clients_dirichlet_indices` |
-| Comparação RANDOM (FedAvg) vs VDN | `experiment.py` | `run_experiment` |
-| Resultados salvos por rodada (test_acc, selection counts) | `experiment.py` | `save_json` |
+**Hardware utilizado nos experimentos do artigo:**
+
+- GPU: NVIDIA GeForce RTX 5090 (21.760 núcleos CUDA, 32 GB GDDR7, 1,79 TB/s)
+
+> GPU é fortemente recomendado para reprodução dos experimentos. O código também executa em CPU, porém com tempo significativamente maior.
+
+**Software:**
+
+- Sistema Operacional: Linux (recomendado)
+- Python: 3.9 ou superior
+- CUDA: compatível com a versão do PyTorch instalada
 
 ---
 
-## Dependências
+# Dependências
 
 | Biblioteca | Versão mínima |
 |---|---|
-| Python | 3.9+ |
+| Python | 3.9 |
 | torch | 2.0 |
 | torchvision | 0.15 |
 | numpy | 1.24 |
 
-O CIFAR-10 é baixado automaticamente pelo `torchvision` na primeira execução (~170 MB).
+O dataset CIFAR-10 é baixado automaticamente pelo `torchvision` na primeira execução (aproximadamente 170 MB). Não é necessário acesso a recursos externos além do PyPI e dos servidores do CIFAR-10.
 
 ---
 
-## Ambiente de Execução
+# Preocupações com Segurança
 
-Os experimentos do artigo foram executados em:
-
-- **GPU**: NVIDIA GeForce RTX 5090 (21.760 núcleos CUDA, 32 GB GDDR7, 1,79 TB/s)
-- **Python**: 3.9 ou superior
-
-GPU é recomendado; CPU é suportado mas significativamente mais lento. O código detecta automaticamente se CUDA está disponível via `config.py`.
+Não há preocupações de segurança relevantes para os avaliadores.
 
 ---
 
-## Instalação
+# Instalação
 
 ```bash
 # 1. Clone o repositório
@@ -91,61 +96,83 @@ source venv/bin/activate  # Linux/macOS
 pip install -r requirements.txt
 ```
 
----
-
-## Execução
-
-### Experimento completo (configuração do artigo)
-
-```bash
-python main.py
-```
-
-Isso executa 500 rodadas com 50 clientes (40% atacantes, label flipping), selecionando 15 clientes por rodada. Os resultados são salvos automaticamente em um arquivo JSON no diretório atual:
-
-```
-results_random_vs_vdn_targeted_PROJMOM_FO_seed2049_<run_id>.json
-```
-
-
-
-Saída esperada: mensagens de progresso por rodada, acurácia de teste para as trilhas RANDOM e VDN, e arquivo JSON salvo ao final.
+Ao final deste processo, o CIFAR-10 será baixado automaticamente na primeira execução.
 
 ---
 
-## Reprodução dos Experimentos do Artigo
+# Teste Mínimo
 
-### Configuração utilizada no artigo
-
-| Hiperparâmetro | Valor |
-|---|---|
-| `rounds` | 500 |
-| `n_clients` | 50 |
-| `k_select` | 15 |
-| `dir_alpha` | 0.3 |
-| `initial_flip_fraction` | 0.4 |
-| `flip_rate_initial` | 1.0 |
-| `local_steps` | 10 |
-| `local_lr` | 0.01 |
-| `SEED` | 2049 |
-
-### Para reproduzir os gráficos/tabelas do artigo
+Execute o script de teste mínimo — 10 rodadas com 10 clientes, selecionando 3 por rodada, apenas para verificar que o ambiente está funcionando corretamente:
 
 ```bash
-python main.py
+python test_min.py
 ```
 
-O arquivo JSON gerado contém:
+**Resultado esperado:** 10 rodadas de progresso impressas no terminal com as acurácias das trilhas RANDOM e VDN, e um arquivo JSON salvo no diretório atual ao final da execução, contendo a acurácia de teste por rodada de cada trilha e a contagem de seleções por cliente.
+
+---
+
+# Experimentos
+
+Os experimentos comparam a seleção de clientes por MARL com a seleção aleatória (FedAvg) sob diferentes cenários de ataque de label flipping e dados não-IID, ao longo de 500 rodadas de treinamento com 50 clientes, selecionando 15 por rodada.
+
+Cada experimento gera um arquivo JSON contendo:
 - `tracks.random.test_acc`: acurácia por rodada da trilha RANDOM (FedAvg)
-- `tracks.vdn.test_acc`: acurácia por rodada da trilha VDN (FEDMARL)
-- `tracks.*.selection_count_total_per_client`: contagem de seleção por cliente
+- `tracks.vdn.test_acc`: acurácia por rodada da trilha VDN (MARL)
+- `tracks.*.selection_count_total_per_client`: frequência de seleção por cliente
 
+Um resultado pré-computado de referência está disponível no repositório (`results_random_vs_vdn_targeted_PROJMOM_FO_seed2049_92768206f1.json`) para consulta imediata, sem necessidade de re-executar os experimentos.
 
+**Recursos esperados:** ~32 GB VRAM (GPU utilizada no artigo); em GPUs com menos memória, reduzir `n_clients` ou `max_per_client`.
 
-> **Nota sobre tempo de execução:** 500 rodadas com 50 clientes e `local_steps=10` levam aproximadamente 1 hora em GPU, dependendo do hardware. Um resultado pré-computado de referência (`results_random_vs_vdn_targeted_PROJMOM_FO_seed2049_92768206f1.json`) está disponível no repositório para consulta imediata.
+**Tempo esperado por experimento:** aproximadamente 1 hora em GPU NVIDIA RTX 5090.
+
+## Reivindicação #1 — Impacto da proporção de clientes atacantes
+
+Avalia o desempenho da abordagem MARL à medida que a fração de clientes maliciosos aumenta, mantendo a taxa de inversão de rótulos em 100%.
+
+**Experimento 1** — 40% de atacantes, 100% de inversão:
+
+```bash
+python exp1.py
+```
+
+**Experimento 2** — 60% de atacantes, 100% de inversão:
+
+```bash
+python exp2.py
+```
+
+**Resultado esperado:** em ambos os cenários, a trilha VDN apresenta acurácia de teste superior à trilha RANDOM, com a vantagem se tornando mais evidente conforme a proporção de atacantes aumenta.
+
+## Reivindicação #2 — Impacto da porcentagem de inversão de rótulos
+
+Avalia o desempenho da abordagem MARL à medida que a intensidade do ataque diminui, mantendo a fração de clientes maliciosos em 40%.
+
+**Experimento 3** — 40% de atacantes, 60% de inversão:
+
+```bash
+python exp3.py
+```
+
+**Experimento 4** — 40% de atacantes, 40% de inversão:
+
+```bash
+python exp4.py
+```
+
+**Resultado esperado:** mesmo com ataques de menor intensidade, a trilha VDN mantém acurácia superior à seleção aleatória, evidenciando a robustez da abordagem em diferentes níveis de ataque.
 
 ---
 
-## Reprodutibilidade
+# LICENSE
 
-A semente global `SEED=2049` é fixada em `config.py` para `random`, `numpy`, `torch` e CUDA. O particionamento Dirichlet, a atribuição de atacantes e os DataLoaders usam seeds derivadas de `SEED`, garantindo resultados idênticos entre execuções no mesmo hardware com as mesmas versões de dependências.
+MIT License
+
+Copyright (c) 2026 GTA-UFRJ
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

@@ -1,5 +1,5 @@
 """
-Main experiment loop: runs RANDOM and VDN client selection tracks in parallel.
+Main experiment loop: runs RANDOM and MARL client selection tracks in parallel.
 
 # ---- State metrics ----
 # proj, gener : computed in server.py -> compute_deltas_proj_mom_probe_now()
@@ -23,7 +23,7 @@ from agent import VDNSelector, build_context_matrix_vdn
 from config import DEVICE, SEED, log_step, seed_worker
 from data import (SwitchableTargetedLabelFlipSubset,
                   make_clients_dirichlet_indices, make_server_val_balanced)
-from metrics import (dynamic_batch_size, eval_acc, eval_loss,windowed_reward)
+from metrics import (dynamic_batch_size, eval_acc, eval_loss, windowed_reward)
 from model import SmallCNN
 from server import (apply_fedavg, compute_deltas_proj_mom_probe_now,
                     update_staleness_streak)
@@ -76,10 +76,11 @@ def run_experiment(
     print_every: int = 10,
     print_advfo_every: int = 20,
     out_dir: str = ".",
+    exp_name: str = "exp",
 ):
     """
     Runs a federated learning experiment comparing random client selection (FedAvg)
-    against VDN-based selection (MARL) under non-IID data and label flipping attacks.
+    against MARL-based selection (VDN) under non-IID data and label flipping attacks.
 
     Both tracks share the same client loaders. Each round:
     - All clients run local_steps SGD steps to compute proj, gener and fo.
@@ -87,7 +88,7 @@ def run_experiment(
 
     Two independent tracks are maintained with separate models:
     - RANDOM: selects K clients uniformly at random each round (FedAvg baseline)
-    - VDN:    selects K clients using the learned MARL policy
+    - MARL:   selects K clients using the learned MARL policy (VDN)
 
     Supports cumulative attacks: new attackers can be introduced mid-training
     at rounds specified by attack_rounds, converting flip_add_fraction of the
@@ -120,13 +121,13 @@ def run_experiment(
         marl_gamma:                discount factor for the VDN agent
         marl_hidden:               hidden layer size of the Q-network
         marl_target_sync_every:    target network sync frequency
-        warmup_transitions:        minimum buffer size before VDN training begins
-        start_train_round:         earliest round at which VDN training can start
+        warmup_transitions:        minimum buffer size before MARL training begins
+        start_train_round:         earliest round at which MARL training can start
         updates_per_round:         Q-network optimization steps per round
-        train_every:               VDN training frequency in rounds
+        train_every:               MARL training frequency in rounds
         buf_size:                  replay buffer capacity
-        batch_base:                minimum batch size for VDN training
-        batch_max:                 maximum batch size for VDN training
+        batch_base:                minimum batch size for MARL training
+        batch_max:                 maximum batch size for MARL training
         batch_buffer_ratio:        buffer-to-batch ratio for dynamic batch sizing
         per_alpha:                 PER prioritization exponent
         per_beta_start:            initial PER importance sampling exponent
@@ -139,6 +140,7 @@ def run_experiment(
         print_every:               summary print frequency in rounds
         print_advfo_every:         prints adv=Q1-Q0 and fo for all clients every N rounds
         out_dir:                   directory where the JSON results file is saved
+        exp_name:                  experiment name included in the output filename
     """
 
     if attack_rounds is None:
@@ -155,9 +157,14 @@ def run_experiment(
 
     # ---------- JSON ----------
     run_id = uuid.uuid4().hex[:10]
-    out_path = Path(out_dir) / f"results_random_vs_vdn_targeted_PROJMOM_FO_seed{SEED}_{run_id}.json"
+    out_path = Path(out_dir) / f"{exp_name}_seed{SEED}_{run_id}.json"
 
     log = {
+        "resumo": {
+            "experimento": exp_name,
+            "fedavg_acuracia_final_%": None,
+            "marl_acuracia_final_%": None,
+        },
         "meta": {
             "run_id": run_id, "seed": int(SEED), "device": str(DEVICE),
             "rounds": int(rounds), "n_clients": int(n_clients), "k_select": int(k_select),
@@ -176,13 +183,13 @@ def run_experiment(
         },
         "attack_schedule": [],
         "tracks": {
-            "random": {"test_acc": [], "selection_count_total_per_client": [0] * n_clients, "selection_phases": []},
-            "vdn":    {"test_acc": [], "selection_count_total_per_client": [0] * n_clients, "selection_phases": []},
+            "fedavg": {"test_acc": [], "selection_count_total_per_client": [0] * n_clients, "selection_phases": []},
+            "marl":   {"test_acc": [], "selection_count_total_per_client": [0] * n_clients, "selection_phases": []},
         },
     }
 
     def save_json():
-        for key in ["random", "vdn"]:
+        for key in ["fedavg", "marl"]:
             cnt = np.array(log["tracks"][key]["selection_count_total_per_client"], dtype=np.int64)
             log["tracks"][key]["final_metrics"] = {
                 "total_selections": int(cnt.sum()),
@@ -190,6 +197,13 @@ def run_experiment(
             for ph in log["tracks"][key]["selection_phases"]:
                 if ph.get("end_round") is None:
                     ph["end_round"] = int(rounds)
+
+        # Preenche resumo de acurácia final
+        if log["tracks"]["fedavg"]["test_acc"]:
+            log["resumo"]["fedavg_acuracia_final_%"] = round(log["tracks"]["fedavg"]["test_acc"][-1] * 100, 2)
+        if log["tracks"]["marl"]["test_acc"]:
+            log["resumo"]["marl_acuracia_final_%"] = round(log["tracks"]["marl"]["test_acc"][-1] * 100, 2)
+
         out_path.parent.mkdir(parents=True, exist_ok=True)
         with open(out_path, "w", encoding="utf-8") as f:
             json.dump(log, f, indent=2)
@@ -275,9 +289,9 @@ def run_experiment(
 
     model_rand   = copy.deepcopy(base).to(DEVICE)
     rng_rand_sel = random.Random(SEED + 424242)
-    start_phase("random", 1, sorted(list(attacked_set)))
+    start_phase("fedavg", 1, sorted(list(attacked_set)))
 
-    model_vdn   = copy.deepcopy(base).to(DEVICE)
+    model_marl  = copy.deepcopy(base).to(DEVICE)
     staleness_v = np.zeros(n_clients, dtype=np.float32)
     streak_v    = np.zeros(n_clients, dtype=np.int32)
     loss_hist_v: List[float] = []
@@ -293,12 +307,12 @@ def run_experiment(
         per_beta_end=per_beta_end, per_beta_steps=per_beta_steps,
         per_eps=per_eps, double_dqn=True, seed=SEED + 10,
     )
-    start_phase("vdn", 1, sorted(list(attacked_set)))
+    start_phase("marl", 1, sorted(list(attacked_set)))
 
     print(f"\nDEVICE={DEVICE} | N_CLIENTS={n_clients} | K={k_select} | rounds={rounds} | dir_alpha={dir_alpha}")
     print(f"Ataque: init_frac={initial_flip_fraction} (n={n_init}) | add_frac={flip_add_fraction} | attack_rounds={attack_rounds}")
     print(f"Flip rates: initial={flip_rate_initial} | new={flip_rate_new_attack}")
-    print(f"Estado VDN: [bias, proj_mom, probe_now, staleness_n, streak_n] (d=5)")
+    print(f"Estado MARL: [bias, proj_mom, probe_now, staleness_n, streak_n] (d=5)")
     print(f"print_advfo_every={print_advfo_every}")
     print(f"Avg client size ~ {np.mean(client_sizes):.1f} samples\n")
     for cid, size in enumerate(client_sizes):
@@ -333,7 +347,7 @@ def run_experiment(
             g_train.manual_seed(round_seed)
 
             # ============================================================
-            # TRACK A: RANDOM
+            # TRACK A: FEDAVG (RANDOM)
             # ============================================================
             a_rand = eval_acc(model_rand, test_loader, max_batches=80)
 
@@ -346,16 +360,16 @@ def run_experiment(
             K = min(k_select, n_clients)
             sel_r = rng_rand_sel.sample(range(n_clients), K)
             apply_fedavg(model_rand, deltas_r, sel_r)
-            bump("random", sel_r)
-            log["tracks"]["random"]["test_acc"].append(float(a_rand))
+            bump("fedavg", sel_r)
+            log["tracks"]["fedavg"]["test_acc"].append(float(a_rand))
 
             # ============================================================
-            # TRACK B: VDN
+            # TRACK B: MARL
             # ============================================================
-            acc_v = eval_acc(model_vdn, test_loader, max_batches=80)
+            acc_v = eval_acc(model_marl, test_loader, max_batches=80)
 
             deltas_v, proj_mom_v, probe_now_v, mom_v = compute_deltas_proj_mom_probe_now(
-                model_vdn, client_train_loaders, client_eval_loaders, val_loader,
+                model_marl, client_train_loaders, client_eval_loaders, val_loader,
                 local_lr, local_steps, probe_batches=probe_batches,
                 mom=mom_v, mom_beta=mom_beta, round_seed=round_seed + 2,
             )
@@ -390,10 +404,10 @@ def run_experiment(
                     print(f"  {cid:02d} | {flag:8s} | adv={adv[cid]:+.6f}")
                 print("")
 
-            apply_fedavg(model_vdn, deltas_v, sel_v)
+            apply_fedavg(model_marl, deltas_v, sel_v)
             update_staleness_streak(staleness_v, streak_v, sel_v)
 
-            l_after = eval_loss(model_vdn, val_loader, max_batches=eval_max_batches)
+            l_after = eval_loss(model_marl, val_loader, max_batches=eval_max_batches)
             loss_hist_v.append(l_after)
             r_v = windowed_reward(loss_hist_v[:-1], l_after, W=reward_window_W)
             pending_v = (obs_v.copy(), act_v.copy(), float(r_v))
@@ -410,15 +424,15 @@ def run_experiment(
                 agent_v.train(batch_size=bs, train_steps=updates_per_round)
                 trained = True
 
-            bump("vdn", sel_v)
-            log["tracks"]["vdn"]["test_acc"].append(float(acc_v))
+            bump("marl", sel_v)
+            log["tracks"]["marl"]["test_acc"].append(float(acc_v))
 
             # ============================================================
             # PRINT SUMMARY
             # ============================================================
             if t % print_every == 0:
                 print(
-                    f"[summary @ {t:3d}] RANDOM={a_rand*100:.2f}% | VDN={acc_v*100:.2f}% | "
+                    f"[summary @ {t:3d}] FEDAVG={a_rand*100:.2f}% | MARL={acc_v*100:.2f}% | "
                     f"attacked={len(attacked_set)} | buf={agent_v.buf.n} | trained={int(trained)}",
                     flush=True,
                 )
